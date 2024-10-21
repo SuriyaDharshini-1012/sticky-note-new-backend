@@ -1,65 +1,123 @@
 package com.stickynotes.service;
-import com.stickynotes.dto.ResponseDTO;
-import com.stickynotes.dto.SignUpDTO;
-import com.stickynotes.dto.UserDTO;
+import com.stickynotes.config.TokenProvider;
+import com.stickynotes.dto.*;
 import com.stickynotes.entity.User;
+import com.stickynotes.exception.EmailNotFormattedException;
+import com.stickynotes.exception.InvalidPasswordException;
+import com.stickynotes.exception.PasswordNotMatchException;
 import com.stickynotes.repository.UserRepository;
 import com.stickynotes.util.Constants;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.regex.Pattern;
+
 @Service
-public class UserService
+public class   UserService implements UserDetailsService
 {
     private final UserRepository userRepository;
-//    private final AuthenticationManager authenticationManager;
-//    private final TokenProvider tokenProvider;
-//    private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
+    private final AuthenticationManager authenticationManager;
 
-    UserService(UserRepository userRepository)
-    {
-        this.userRepository=userRepository;
-//        this.authenticationManager=authenticationManger;
-//        this.tokenProvider=tokenProvider;
-//        this.passwordEncoder=passwordEncoder;
-
+    @Lazy
+    public UserService(UserRepository userRepository, TokenProvider tokenProvider, AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.tokenProvider = tokenProvider;
+        this.authenticationManager = authenticationManager;
     }
 
-    public ResponseDTO createUser(final UserDTO userDTO)
-    {
-        User user=User.builder()
-                .firstName(userDTO.getFirstName())
-                .lastName(userDTO.getLastName())
-                .email(userDTO.getEmail())
-                .password(userDTO.getPassword())
-                .confirmPassword(userDTO.getConfirmPassword())
-                .termsAccepted(userDTO.getTermsAccepted())
+
+    public ResponseDTO signUp(SignUpDTO signUpDTO) {
+        if (!emailValidation(signUpDTO.getEmail())) {
+            throw new EmailNotFormattedException("Email not formatted");
+        }
+
+        if (!passwordValidation(signUpDTO.getPassword())) {
+            throw new InvalidPasswordException("Password should contain more than 8 characters");
+        }
+
+        if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
+            throw new PasswordNotMatchException("Password and confirmation password don't match");
+        }
+
+        if (signUpDTO.getPhoneNumber() == null || signUpDTO.getPhoneNumber().isEmpty()) {
+            throw new IllegalArgumentException("Phone number is required");
+        }
+
+        if (signUpDTO.getIsTermsAccepted() == null || !signUpDTO.getIsTermsAccepted()) {
+            throw new IllegalArgumentException("You must accept the terms and conditions");
+        }
+
+        User user = User.builder()
+                .firstName(signUpDTO.getFirstName())
+                .lastName(signUpDTO.getLastName())
+                .email(signUpDTO.getEmail())
+                .password(new BCryptPasswordEncoder().encode(signUpDTO.getPassword()))
+                .phoneNumber(signUpDTO.getPhoneNumber()) // Assuming User has a phoneNumber field
+                .termsAccepted(signUpDTO.getIsTermsAccepted()) // Assuming User has a termsAccepted field
                 .build();
-          user=this.userRepository.save(user);
-          return ResponseDTO.builder().statusCode(200)
-                .data(user)
-                .message(Constants.CREATED).build();
+
+        return ResponseDTO.builder()
+                .statusCode(200)
+                .data(userRepository.save(user))
+                .message(Constants.CREATED)
+                .build();
     }
 
-//    public ResponseDTO signUp(SignUpDTO signUpDTO)
-//    {
-////        String encodedPassword=new ByCryptPasswordEncoder().encode(signUpDTO.getPassword())
-//
-//        if(!emailValidation(signUpDTO.getEmail())) {
-//            throw new EmailNotFormattedException("Email not formatted");
-//        }
-//
-//        if(!passwordValidation(signUpDTO.getPassword())) {
-//            throw new InvaildPasswordException("password should contain more then 8 charactors ");
-//        }
-//        if(!signUpDTO.getPassword().equals(signUpDTO.getConfirmationPassword())){
-//            throw new PasswordNotMatchException("Password and Confirmation password doesn't match");
-//        }
-//        User user = User.builder()
-//                .email(signUpDTO.getEmail())
-//                .password(new BCryptPasswordEncoder().encode(signUpDTO.getPassword()))
-//                .confirmationPassword(signUpDTO.getConfirmationPassword())
-//                .build();
-//
-//        return  ResponseDTO.builder().statusCode(200).data(userRepository.save(user)).message(Constants.CREATED).build();
-//    }
+    public boolean emailValidation(String email) {
+
+        if (email == null) {
+            return false;
+        }
+        return Pattern.compile("^[a-z0-9+_.-]+@(gmail|yahoo|outlook|zoho)\\.com$").matcher(email).matches();
+    }
+    private boolean passwordValidation(String password) {
+        String pass = "^(?=.*[0-9])"
+                + "(?=.*[a-z])(?=.*[A-Z])"
+                + "(?=.*[@#$%^&+=])"
+                + "(?=\\S+$).{8,20}$";
+        return Pattern.compile(pass).matcher(password).matches();
+    }
+    public ResponseDTO refreshAccessToken(RefreshTokenDTO request) {
+        try {
+            String newAccessToken = tokenProvider.refreshAccessToken(request.getRefreshToken());
+            String refreshToken = request.setRefreshToken(newAccessToken);
+            return ResponseDTO.builder().message(Constants.CREATED).data(refreshToken).statusCode(200).build();
+        } catch (Exception e) {
+
+            return ResponseDTO.builder().message(Constants.NOT_FOUND).data("Invalid refresh token").statusCode(401).build();
+        }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    public ResponseDTO signIn(SignInDTO signInDTO) throws AuthenticationException {
+
+        UserDetails user = userRepository.findByEmail(signInDTO.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Email doesn't exist, please sign up"));
+
+        var userNamePassword = new UsernamePasswordAuthenticationToken(signInDTO.getEmail(), signInDTO.getPassword());
+
+        var authorizedUser = authenticationManager.authenticate(userNamePassword);
+
+        var accessToken = tokenProvider.generateAccessToken((User) authorizedUser.getPrincipal());
+        var refreshToken = tokenProvider.generateRefreshToken((User) authorizedUser.getPrincipal());
+        return ResponseDTO.builder()
+                .message(Constants.RETRIVED)
+                .data(new JwtDTO(accessToken, refreshToken))
+                .statusCode(200)
+                .build();
+    }
+
 }

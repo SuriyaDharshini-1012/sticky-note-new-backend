@@ -1,8 +1,12 @@
 package com.stickynotes.dto;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class SignUpDTO
 {
     private String firstName;

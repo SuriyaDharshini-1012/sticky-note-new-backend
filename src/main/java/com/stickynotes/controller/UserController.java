@@ -1,6 +1,7 @@
 package com.stickynotes.controller;
 
 import com.stickynotes.dto.ResponseDTO;
+import com.stickynotes.dto.SignInDTO;
 import com.stickynotes.dto.SignUpDTO;
 import com.stickynotes.dto.UserDTO;
 import com.stickynotes.service.UserService;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/user")
+@RequestMapping("/api/v1/auth")
 @RestController
 public class UserController
 {
@@ -22,12 +23,17 @@ public class UserController
         this.userService=userService;
     }
 
-    @PostMapping("/create-user")
-    public ResponseDTO createUser(@RequestBody UserDTO userDTO)
-    {
-        return new ResponseDTO(Constants.CREATED,this.userService.createUser(userDTO),201);
+
+
+    @PostMapping("/sign-up")
+    public ResponseDTO signUp(@RequestBody SignUpDTO signupDto){
+        return this.userService.signUp(signupDto);
     }
 
+    @PostMapping("/sign-in")
+    public ResponseDTO signIn(@RequestBody SignInDTO signInDTO){
+        return this.userService.signIn(signInDTO);
+    }
 
 
 }
