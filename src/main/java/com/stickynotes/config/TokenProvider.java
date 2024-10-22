@@ -46,7 +46,7 @@ public class TokenProvider
     }
     public String refreshAccessToken(String refreshToken) {
         String email = validateRefreshToken(refreshToken);
-        User user = new User(null, email, null, null,null);
+        User user = new User();
         return generateAccessToken(user);
     }
     public String generateRefreshToken(User user) {

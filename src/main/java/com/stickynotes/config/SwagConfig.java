@@ -17,7 +17,7 @@ public class SwagConfig {
     public OpenAPI awesomeAPI() {
         return new OpenAPI().addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes("Bearer Authentication", createAPIKeySchema()))
-                .info(new Info().title("Booking app").description("Bus Ticket Booking Application")
+                .info(new Info().title("Sticky-Note").description("sticky-notes Application")
                         .version("1.0"));
     }
 

@@ -42,8 +42,9 @@ public class User implements UserDetails
     @Column(name="email")
     private String email;
 
-    @Column(name="terms_accepted")
+    @Column(name = "terms_accepted")
     private Boolean termsAccepted;
+
 
     @Column(name = "created_at")
     @CurrentTimestamp
@@ -59,8 +60,6 @@ public class User implements UserDetails
     @UpdateTimestamp
     private Date updatedAt;
 
-    public User(Object o, String email, Object o1, Object o2, Object o3) {
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -69,7 +68,7 @@ public class User implements UserDetails
 
     @Override
     public String getUsername() {
-        return "";
+        return email;
     }
     @Override
     public String getPassword() {

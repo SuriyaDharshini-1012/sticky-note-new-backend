@@ -44,20 +44,13 @@ public class AuthenticationConfig
         http
                 .csrf(csrf ->csrf.disable())
                 .authorizeHttpRequests(request -> request
-
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**").permitAll()
-                        .requestMatchers("/user/**", "/api/v1/auth/**").permitAll()
-//                        .requestMatchers("/admin/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/booking/**").hasAnyAuthority("ADMIN", "CUSTOMER")
-//                        .requestMatchers("/customer/**").hasAnyAuthority("ADMIN" , "CUSTOMER")
-//                        .requestMatchers("/driver/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/trip/**").hasAnyAuthority("ADMIN",  "CUSTOMER")
-//                        .requestMatchers("/bus/**").hasAnyAuthority("ADMIN","CUSTOMER")
-//                        .requestMatchers("/feedback/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/seat/**").hasAnyAuthority("ADMIN","CUSTOMER")
-//                        .requestMatchers("/users/**").hasAuthority("ADMIN")
-
-                        .anyRequest().authenticated())
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/webjars/**","/api/v1/auth/**").permitAll()
+                                //.requestMatchers("/user/**", "/api/v1/auth/**").permitAll()
+                                .anyRequest().authenticated())
 
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

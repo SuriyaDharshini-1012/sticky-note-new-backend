@@ -15,5 +15,7 @@ public class SignUpDTO
     private String password;
     private String confirmPassword;
     private String phoneNumber;
-    private Boolean isTermsAccepted;
+    private Boolean termsAccepted;  // Change this to termsAccepted
+
+
 }

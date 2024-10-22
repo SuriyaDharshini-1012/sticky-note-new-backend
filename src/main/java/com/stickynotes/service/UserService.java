@@ -47,22 +47,27 @@ public class   UserService implements UserDetailsService
             throw new PasswordNotMatchException("Password and confirmation password don't match");
         }
 
-        if (signUpDTO.getPhoneNumber() == null || signUpDTO.getPhoneNumber().isEmpty()) {
+            if (signUpDTO.getPhoneNumber() == null || signUpDTO.getPhoneNumber().isEmpty()) {
             throw new IllegalArgumentException("Phone number is required");
         }
 
-        if (signUpDTO.getIsTermsAccepted() == null || !signUpDTO.getIsTermsAccepted()) {
+        if (signUpDTO.getTermsAccepted() == null || !signUpDTO.getTermsAccepted()) {
             throw new IllegalArgumentException("You must accept the terms and conditions");
         }
+
+
 
         User user = User.builder()
                 .firstName(signUpDTO.getFirstName())
                 .lastName(signUpDTO.getLastName())
                 .email(signUpDTO.getEmail())
                 .password(new BCryptPasswordEncoder().encode(signUpDTO.getPassword()))
-                .phoneNumber(signUpDTO.getPhoneNumber()) // Assuming User has a phoneNumber field
-                .termsAccepted(signUpDTO.getIsTermsAccepted()) // Assuming User has a termsAccepted field
+                .confirmPassword(signUpDTO.getConfirmPassword())
+                .phoneNumber(signUpDTO.getPhoneNumber())
+                .termsAccepted(signUpDTO.getTermsAccepted())
                 .build();
+        //System.out.println("Terms Accepted: " + signUpDTO.getIsTermsAccepted());
+
 
         return ResponseDTO.builder()
                 .statusCode(200)
