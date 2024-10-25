@@ -18,21 +18,49 @@ public class TokenProvider
     @Value("${security.jwt.secret-key}")
     private String jwtSecret;
 
-    public String generateAccessToken(User user) {
-        try {
-            String username = user.getUsername();
-            String firstName = user.getFirstName();
+//    public String generateAccessToken(User user) {
+//        try {
+//            String username = user.getUsername();
+//            String firstName = user.getFirstName();
+//
+//            Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+//            return JWT.create()
+//                    .withSubject(username)
+//                    .withClaim("UserEmail", username)
+//                    .withIssuedAt(Instant.now())
+//                    .withExpiresAt(genAccessExpirationDate())
+//                    .withClaim("Name", firstName)
+//                    .sign(algorithm);
+//        } catch (JWTCreationException exception) {
+//            throw new JWTCreationException("Error while generating access token", exception);
+//        }
+//    }
+public String generateAccessToken(User user) {
+    try {
+        String username = user.getUsername();
+        String firstName = user.getFirstName();
+        String userId = user.getId(); // Assuming you have a method to get the user's ID
 
+        Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+        return JWT.create()
+                .withSubject(username)
+                .withClaim("UserEmail", username)
+                .withIssuedAt(Instant.now())
+                .withExpiresAt(genAccessExpirationDate())
+                .withClaim("FirstName", firstName)
+                .withClaim("UserId", userId) // Add the user ID claim
+                .sign(algorithm);
+    } catch (JWTCreationException exception) {
+        throw new JWTCreationException("Error while generating access token", exception);
+    }
+}
+
+    public String getUserIdFromToken(String token) {
+        try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
-            return JWT.create()
-                    .withSubject(username)
-                    .withClaim("UserEmail", username)
-                    .withIssuedAt(Instant.now())
-                    .withExpiresAt(genAccessExpirationDate())
-                    .withClaim("Name", firstName)
-                    .sign(algorithm);
-        } catch (JWTCreationException exception) {
-            throw new JWTCreationException("Error while generating access token", exception);
+            return JWT.require(algorithm).build().verify(token).getClaim("UserId").asString(); // Get the user ID claim as String
+        } catch (JWTVerificationException exception) {
+            throw new JWTVerificationException("Error while validating token", exception);
         }
     }
 
