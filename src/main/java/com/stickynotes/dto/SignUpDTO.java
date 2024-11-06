@@ -16,6 +16,4 @@ public class SignUpDTO
     private String confirmPassword;
     private String phoneNumber;
     private Boolean termsAccepted; 
-
-
 }
