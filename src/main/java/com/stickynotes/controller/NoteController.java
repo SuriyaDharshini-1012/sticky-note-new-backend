@@ -9,6 +9,7 @@ import com.stickynotes.service.NoteService;
 import com.stickynotes.util.Constants;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/auth")
@@ -68,4 +69,11 @@ public class NoteController {
     public ResponseDTO updateNote(@PathVariable String id, @RequestBody NoteDTO noteDTO) {
        return new ResponseDTO(Constants.UPDATED,this.noteService.updateNote(id,noteDTO),200);
     }
-}
+
+//    @GetMapping("/{id}")
+//    public List<Note> getNoteById(@PathVariable String id)
+//    {
+//        return this.noteService.retrieveNoteById(id);
+//    }
+
+    }

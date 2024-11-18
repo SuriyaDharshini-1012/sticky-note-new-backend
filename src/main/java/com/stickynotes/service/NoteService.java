@@ -1,7 +1,5 @@
 package com.stickynotes.service;
 
-
-
 import com.stickynotes.dto.NoteDTO;
 import com.stickynotes.dto.ResponseDTO;
 import com.stickynotes.entity.Note;
@@ -10,8 +8,8 @@ import com.stickynotes.exception.BadRequestServiceAlertException;
 import com.stickynotes.repository.NoteRepository;
 import com.stickynotes.repository.UserRepository;
 import com.stickynotes.util.Constants;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -26,27 +24,6 @@ public class NoteService {
         this.userRepository = userRepository;
     }
 
-
-//    public ResponseDTO createNote(final NoteDTO noteDTO) {
-//
-//        if (noteDTO.getUser() == null || noteDTO.getUser().getId() == null) {
-//            throw new BadRequestServiceAlertException("User information is missing.");
-//        }
-//
-//        User user = userRepository.findById(noteDTO.getUser().getId())
-//                .orElseThrow(() -> new BadRequestServiceAlertException(Constants.NOT_FOUND));
-//
-//        Note note = Note.builder()
-//                .title(noteDTO.getTitle())
-//                .colour(noteDTO.getColour())
-//                .content(noteDTO.getContent())
-//                .isPinned(noteDTO.getIsPinned())
-//                .user(user)
-//                .build();
-//
-//        noteRepository.save(note);
-//        return new ResponseDTO(Constants.CREATED, note, 200);
-//    }
     public List<Note> getAllNotes() {
         return noteRepository.findAll();
     }
@@ -112,6 +89,18 @@ public class NoteService {
         return new ResponseDTO(Constants.NOT_FOUND,null,200);
 
       }
+
+    public ResponseDTO retrieveNoteById(String id) {
+        Optional<Note> noteOptional = noteRepository.findById(id);
+        if (noteOptional.isPresent()) {
+            return new ResponseDTO(Constants.RETRIVED, noteOptional.get(),200);
+        } else {
+            return new ResponseDTO(Constants.NOT_FOUND, null,400);
+        }
+    }
+
+
+
 }
 
 

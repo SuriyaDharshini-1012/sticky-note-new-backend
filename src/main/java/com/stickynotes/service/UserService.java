@@ -43,13 +43,7 @@ public class   UserService implements UserDetailsService
             throw new InvalidPasswordException("Password should contain more than 8 characters");
         }
 
-        if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
-            throw new PasswordNotMatchException("Password and confirmation password don't match");
-        }
 
-            if (signUpDTO.getPhoneNumber() == null || signUpDTO.getPhoneNumber().isEmpty()) {
-            throw new IllegalArgumentException("Phone number is required");
-        }
 
         if (signUpDTO.getTermsAccepted() == null || !signUpDTO.getTermsAccepted()) {
             throw new IllegalArgumentException("You must accept the terms and conditions");
@@ -62,8 +56,6 @@ public class   UserService implements UserDetailsService
                 .lastName(signUpDTO.getLastName())
                 .email(signUpDTO.getEmail())
                 .password(new BCryptPasswordEncoder().encode(signUpDTO.getPassword()))
-                .confirmPassword(signUpDTO.getConfirmPassword())
-                .phoneNumber(signUpDTO.getPhoneNumber())
                 .termsAccepted(signUpDTO.getTermsAccepted())
                 .build();
         //System.out.println("Terms Accepted: " + signUpDTO.getIsTermsAccepted());
@@ -121,6 +113,14 @@ public class   UserService implements UserDetailsService
         return ResponseDTO.builder()
                 .message(Constants.RETRIVED)
                 .data(new JwtDTO(accessToken, refreshToken))
+                .statusCode(200)
+                .build();
+    }
+
+    public ResponseDTO getUserDetail(String id) {
+        return ResponseDTO.builder()
+                .message(Constants.RETRIVED)
+                .data(this.userRepository.findById(id).orElseThrow(()-> new UsernameNotFoundException("USER ID NOT EXIST")))
                 .statusCode(200)
                 .build();
     }
